@@ -1,0 +1,19 @@
+# udev rules for MindVision / LCOptics industrial USB cameras (vendor ID f622).
+#
+# libMVSDK talks to the camera through the raw USB node /dev/bus/usb/<bus>/<dev>.
+# By default that node is 0664 root:root, so a normal user cannot open it for
+# writing and the SDK fails with "user control fd open failed" while
+# CameraEnumerateDevice() quietly returns an empty list.
+#
+# Install:
+#   sudo cp 88-mvusb.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+#   then unplug and replug the camera
+#
+# This grants access to the 'plugdev' group rather than to everyone. Check that
+# you are in it (`id -nG`); if not: sudo usermod -aG plugdev $USER + re-login.
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="f622", GROUP="plugdev", MODE="0660"
+
+# If your setup has no plugdev group, comment the line above and use this
+# world-accessible variant instead (this is what the MindVision installer ships):
+# SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="f622", MODE="0666"

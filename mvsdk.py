@@ -1,4 +1,5 @@
 #coding=utf-8
+import os
 import platform
 from ctypes import *
 from threading import local
@@ -20,7 +21,18 @@ def _Init():
 		_sdk = windll.MVCAMSDK if is_x86 else windll.MVCAMSDK_X64
 		CALLBACK_FUNC_TYPE = WINFUNCTYPE
 	else:
-		_sdk = cdll.LoadLibrary("libMVSDK.so")
+		library_path = os.environ.get(
+			"MVSDK_LIBRARY",
+			os.path.join(os.path.dirname(os.path.abspath(__file__)), "libMVSDK.so"),
+		)
+		try:
+			_sdk = cdll.LoadLibrary(library_path)
+		except OSError as error:
+			raise OSError(
+				"Cannot load MindVision SDK library. Expected libMVSDK.so at "
+				f"{library_path!r}. Install the Linux SDK, copy its library there, "
+				"or set MVSDK_LIBRARY to the full path of libMVSDK.so."
+			) from error
 		CALLBACK_FUNC_TYPE = CFUNCTYPE
 
 _Init()
